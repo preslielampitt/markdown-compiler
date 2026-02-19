@@ -26,6 +26,23 @@ def compile_headers(line):
     >>> compile_headers('      # this is not a header')
     '      # this is not a header'
     '''
+
+    if line[:2] == '# ':
+        # why doesn't this line do anything?
+        # answer: strings are *immutable*; they can never change
+        # functions that "seem like they should change the string"
+        # actually just return a new string
+        line = line.replace('# ', '<h1> ') + '</h1>'
+    if line[:3] == '## ':
+        line = line.replace('## ', '<h2> ') + '</h2>'
+    if line[:4] == '### ':
+        line = line.replace('### ', '<h3> ') + '</h3>'
+    if line[:5] == '#### ':
+        line = line.replace('#### ', '<h4> ') + '</h4>'
+    if line[:6] == '##### ':
+        line = line.replace('##### ', '<h5> ') + '</h5>'
+    if line[:7] == '###### ':
+        line = line.replace('###### ', '<h6> ') + '</h6>'
     return line
 
 
@@ -50,7 +67,25 @@ def compile_italic_star(line):
     >>> compile_italic_star('*')
     '*'
     '''
-    return line
+    # all of these functions are easiest to implement with the accumulator pattern
+    # use .find or .count functions to check number of stars
+    accumulator = ''
+    has_opened = False
+    num_stars = line.count('*')
+    if num_stars % 2 == 0:
+        for char in line:
+            if char == '*':
+                if not has_opened:
+                    accumulator += '<i>'
+                    has_opened = True
+                else:
+                    accumulator += '</i>'
+                    has_opened = False
+            else:
+                accumulator += char
+    else:
+        return line
+    return accumulator
 
 
 def compile_italic_underscore(line):
@@ -71,6 +106,23 @@ def compile_italic_underscore(line):
     >>> compile_italic_underscore('_')
     '_'
     '''
+    accumulator = ''
+    has_opened = False
+    num_underscores = line.count('_')
+    if num_underscores % 2 == 0:
+        for char in line:
+            if char == '_':
+                if not has_opened:
+                    accumulator += '<i>'
+                    has_opened = True
+                else:
+                    accumulator += '</i>'
+                    has_opened = False
+            else:
+                accumulator += char
+    else:
+        return line
+    return accumulator
     return line
 
 
@@ -94,7 +146,24 @@ def compile_strikethrough(line):
     >>> compile_strikethrough('~~')
     '~~'
     '''
-    return line
+    accumulator = ''
+    first_tilds = line.find('~~')
+    more_tilds = -1
+    i = 0
+    while i < len(line):
+        if i == first_tilds or i == more_tilds:
+            end_tilds = line.find('~~', i+2)
+            if end_tilds != -1:
+                accumulator += '<ins>' + line[i+2:end_tilds] + '</ins>'
+                i = end_tilds + 2
+                more_tilds = line.find('~~', i)
+            else:
+                accumulator += line[i]
+                i += 1
+        else:
+            accumulator += line[i]
+            i += 1
+    return accumulator 
 
 
 def compile_bold_stars(line):
@@ -115,7 +184,24 @@ def compile_bold_stars(line):
     >>> compile_bold_stars('**')
     '**'
     '''
-    return line
+    accumulator = ''
+    first_stars = line.find('**')
+    more_stars = -1
+    i = 0
+    while i < len(line):
+        if i == first_stars or i == more_stars:
+            end_stars = line.find('**', i+2)
+            if end_stars != -1:
+                accumulator += '<b>' + line[i+2:end_stars] + '</b>'
+                i = end_stars + 2
+                more_stars = line.find('**', i)
+            else:
+                accumulator += line[i]
+                i += 1
+        else:
+            accumulator += line[i]
+            i += 1
+    return accumulator 
 
 
 def compile_bold_underscore(line):
@@ -136,7 +222,24 @@ def compile_bold_underscore(line):
     >>> compile_bold_underscore('__')
     '__'
     '''
-    return line
+    accumulator = ''
+    first_undersc = line.find('__')
+    more_undersc = -1
+    i = 0
+    while i < len(line):
+        if i == first_undersc or i == more_undersc:
+            end_undersc = line.find('__', i+2)
+            if end_undersc != -1:
+                accumulator += '<b>' + line[i+2:end_undersc] + '</b>'
+                i = end_undersc + 2
+                more_undersc = line.find('__', i)
+            else:
+                accumulator += line[i]
+                i += 1
+        else:
+            accumulator += line[i]
+            i += 1
+    return accumulator
 
 
 def compile_code_inline(line):
@@ -166,8 +269,31 @@ def compile_code_inline(line):
     >>> compile_code_inline('```python3')
     '```python3'
     '''
-    return line
-
+    accumulator = ''
+    first_quote = line.find("`")
+    more_quotes = -1
+    i = 0
+    while i < len(line):
+        if i == first_quote or i == more_quotes:
+            end_quotes = line.find("`", i+1)
+            if end_quotes != -1 and end_quotes != i+1:
+                if "<" in line or ">" in line:
+                    num_greater_less_than = line.count('<') + line.count('>')
+                    newLine = line[i+1:end_quotes].replace('<','&lt;')
+                    newLine = newLine.replace('>','&gt;')
+                    end_quotes += (3*num_greater_less_than)
+                else:
+                    newLine = line[i+1:end_quotes]
+                accumulator += '<code>' + newLine + '</code>'
+                i = end_quotes + 1
+                more_quotes = line.find("`", i)
+            else:
+                accumulator += line[i]
+                i += 1
+        else:
+            accumulator += line[i]
+            i += 1
+    return accumulator
 
 def compile_links(line):
     '''
@@ -186,8 +312,19 @@ def compile_links(line):
     >>> compile_links('this is wrong: [course webpage](https://github.com/mikeizbicki/cmc-csci040')
     'this is wrong: [course webpage](https://github.com/mikeizbicki/cmc-csci040'
     '''
-    return line
-
+    link = ''
+    i = 0
+    start = line.find('[')
+    bracket_paranth = line.find('](')
+    end = line.find(')')
+    while i < len(line):
+        if start == i and bracket_paranth != -1 and end != -1:
+            link += '<a href="' + line[bracket_paranth+2:end] + '">' + line[i+1:bracket_paranth] + '</a>'
+            i = end + 1
+        else:
+            link += line[i]
+            i += 1
+    return link
 
 def compile_images(line):
     '''
@@ -205,4 +342,16 @@ def compile_images(line):
     >>> compile_images('This is an image of Mike Izbicki: ![Mike Izbicki](https://avatars1.githubusercontent.com/u/1052630?v=2&s=460)')
     'This is an image of Mike Izbicki: <img src="https://avatars1.githubusercontent.com/u/1052630?v=2&s=460" alt="Mike Izbicki" />'
     '''
-    return line
+    link = ''
+    i = 0
+    start = line.find('![')
+    bracket_paranth = line.find('](')
+    end = line.find(')')
+    while i < len(line):
+        if start == i and bracket_paranth != -1 and end != -1:
+            link += '<img src="' + line[bracket_paranth+2:end] + '" alt="' + line[start+2:bracket_paranth] + '" />'
+            i = end + 1
+        else:
+            link += line[i]
+            i += 1
+    return link
