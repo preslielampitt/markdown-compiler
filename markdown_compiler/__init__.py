@@ -3,17 +3,7 @@ This file contains functions that work on entire documents at a time
 (and not line-by-line).
 '''
 
-from markdown_compiler.util.line_functions import (
-    compile_headers,
-    compile_bold_stars,
-    compile_bold_underscore,
-    compile_italic_star,
-    compile_italic_underscore,
-    compile_code_inline,
-    compile_images,
-    compile_links,
-    compile_strikethrough
-)
+from markdown_compiler.util.line_functions import *
 
 
 def compile_lines(text):
