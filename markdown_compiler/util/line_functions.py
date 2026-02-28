@@ -2,6 +2,7 @@
 Each of the functions in this file takes a single line of input and transforms the line in some way.
 '''
 
+
 def compile_headers(line):
     '''
     Convert markdown headers into <h1>,<h2>,etc tags.
@@ -152,9 +153,9 @@ def compile_strikethrough(line):
     i = 0
     while i < len(line):
         if i == first_tilds or i == more_tilds:
-            end_tilds = line.find('~~', i+2)
+            end_tilds = line.find('~~', i + 2)
             if end_tilds != -1:
-                accumulator += '<ins>' + line[i+2:end_tilds] + '</ins>'
+                accumulator += '<ins>' + line[i + 2:end_tilds] + '</ins>'
                 i = end_tilds + 2
                 more_tilds = line.find('~~', i)
             else:
@@ -163,7 +164,7 @@ def compile_strikethrough(line):
         else:
             accumulator += line[i]
             i += 1
-    return accumulator 
+    return accumulator
 
 
 def compile_bold_stars(line):
@@ -190,9 +191,9 @@ def compile_bold_stars(line):
     i = 0
     while i < len(line):
         if i == first_stars or i == more_stars:
-            end_stars = line.find('**', i+2)
+            end_stars = line.find('**', i + 2)
             if end_stars != -1:
-                accumulator += '<b>' + line[i+2:end_stars] + '</b>'
+                accumulator += '<b>' + line[i + 2:end_stars] + '</b>'
                 i = end_stars + 2
                 more_stars = line.find('**', i)
             else:
@@ -201,7 +202,7 @@ def compile_bold_stars(line):
         else:
             accumulator += line[i]
             i += 1
-    return accumulator 
+    return accumulator
 
 
 def compile_bold_underscore(line):
@@ -228,9 +229,9 @@ def compile_bold_underscore(line):
     i = 0
     while i < len(line):
         if i == first_undersc or i == more_undersc:
-            end_undersc = line.find('__', i+2)
+            end_undersc = line.find('__', i + 2)
             if end_undersc != -1:
-                accumulator += '<b>' + line[i+2:end_undersc] + '</b>'
+                accumulator += '<b>' + line[i + 2:end_undersc] + '</b>'
                 i = end_undersc + 2
                 more_undersc = line.find('__', i)
             else:
@@ -269,31 +270,37 @@ def compile_code_inline(line):
     >>> compile_code_inline('```python3')
     '```python3'
     '''
+
+    if '```' in line:
+        return line
+
     accumulator = ''
-    first_quote = line.find("`")
-    more_quotes = -1
     i = 0
+    in_code = False
+
     while i < len(line):
-        if i == first_quote or i == more_quotes:
-            end_quotes = line.find("`", i+1)
-            if end_quotes != -1 and end_quotes != i+1:
-                if "<" in line or ">" in line:
-                    num_greater_less_than = line.count('<') + line.count('>')
-                    newLine = line[i+1:end_quotes].replace('<','&lt;')
-                    newLine = newLine.replace('>','&gt;')
-                    end_quotes += (3*num_greater_less_than)
+        if line[i] == '`':
+            if not in_code:
+                accumulator += '<code>'
+                in_code = True
+            else:
+                accumulator += '</code>'
+                in_code = False
+            i += 1
+        else:
+            if in_code:
+                if line[i] == '<':
+                    accumulator += '&lt;'
+                elif line[i] == '>':
+                    accumulator += '&gt;'
                 else:
-                    newLine = line[i+1:end_quotes]
-                accumulator += '<code>' + newLine + '</code>'
-                i = end_quotes + 1
-                more_quotes = line.find("`", i)
+                    accumulator += line[i]
             else:
                 accumulator += line[i]
-                i += 1
-        else:
-            accumulator += line[i]
             i += 1
+
     return accumulator
+
 
 def compile_links(line):
     '''
@@ -319,12 +326,13 @@ def compile_links(line):
     end = line.find(')')
     while i < len(line):
         if start == i and bracket_paranth != -1 and end != -1:
-            link += '<a href="' + line[bracket_paranth+2:end] + '">' + line[i+1:bracket_paranth] + '</a>'
+            link += '<a href = "' + line[bracket_paranth + 2:end] + '">' + line[i + 1:bracket_paranth] + '</a>'
             i = end + 1
         else:
             link += line[i]
             i += 1
     return link
+
 
 def compile_images(line):
     '''
@@ -349,7 +357,7 @@ def compile_images(line):
     end = line.find(')')
     while i < len(line):
         if start == i and bracket_paranth != -1 and end != -1:
-            link += '<img src="' + line[bracket_paranth+2:end] + '" alt="' + line[start+2:bracket_paranth] + '" />'
+            link += '<img src = "' + line[bracket_paranth + 2:end] + '" alt = "' + line[start + 2:bracket_paranth] + '" />'
             i = end + 1
         else:
             link += line[i]
