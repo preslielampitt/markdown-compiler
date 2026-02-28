@@ -326,7 +326,7 @@ def compile_links(line):
     end = line.find(')')
     while i < len(line):
         if start == i and bracket_paranth != -1 and end != -1:
-            link += '<a href = "' + line[bracket_paranth + 2:end] + '">' + line[i + 1:bracket_paranth] + '</a>'
+            link += '<a href="' + line[bracket_paranth + 2:end] + '">' + line[i + 1:bracket_paranth] + '</a>'
             i = end + 1
         else:
             link += line[i]
@@ -357,7 +357,7 @@ def compile_images(line):
     end = line.find(')')
     while i < len(line):
         if start == i and bracket_paranth != -1 and end != -1:
-            link += '<img src = "' + line[bracket_paranth + 2:end] + '" alt = "' + line[start + 2:bracket_paranth] + '" />'
+            link += '<img src="' + line[bracket_paranth + 2:end] + '" alt="' + line[start + 2:bracket_paranth] + '" />'
             i = end + 1
         else:
             link += line[i]
